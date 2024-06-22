@@ -49,7 +49,7 @@ public abstract class AbstractRequesterScreen<M extends AbstractRequesterMenu> e
     private static final int GUI_PADDING_X = 8;
     private static final int GUI_PADDING_Y = 6;
     protected static final int GUI_HEADER_HEIGHT = 19;
-    protected static final int GUI_FOOTER_HEIGHT = 98;
+    protected static final int GUI_FOOTER_HEIGHT = 100;
 
     private static final int TEXT_MARGIN_X = 2;
     private static final int TEXT_MAX_WIDTH = 156;
