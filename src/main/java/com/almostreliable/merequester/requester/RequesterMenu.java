@@ -51,7 +51,7 @@ public final class RequesterMenu extends AbstractRequesterMenu {
     @Override
     protected void sendFullUpdate(@Nullable IGrid grid) {
         if (getPlayer() instanceof ServerPlayer serverPlayer) {
-            PacketDistributor.PLAYER.with(serverPlayer).send(RequesterSyncPacket.clearData());
+            PacketDistributor.sendToPlayer(serverPlayer, RequesterSyncPacket.createClearData());
         }
         requestTracker = createTracker((RequesterBlockEntity) getBlockEntity());
         syncRequestTrackerFull(requestTracker);

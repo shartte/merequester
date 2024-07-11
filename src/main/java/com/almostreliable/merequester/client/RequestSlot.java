@@ -79,6 +79,6 @@ public class RequestSlot extends FakeSlot {
 
     @Override
     public void setFilterTo(ItemStack itemStack) {
-        PacketDistributor.SERVER.noArg().send(new DragAndDropPacket(getRequesterReference().getRequesterId(), getSlot(), itemStack));
+        PacketDistributor.sendToServer(new DragAndDropPacket(getRequesterReference().getRequesterId(), getSlot(), itemStack));
     }
 }

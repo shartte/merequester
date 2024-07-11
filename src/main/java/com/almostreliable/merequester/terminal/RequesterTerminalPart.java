@@ -11,7 +11,6 @@ import appeng.parts.reporting.PatternAccessTerminalPart;
 import com.almostreliable.merequester.MERequester;
 import com.almostreliable.merequester.Utils;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -34,8 +33,8 @@ public class RequesterTerminalPart extends AbstractDisplayPart {
     }
 
     @Override
-    public boolean onPartActivate(Player player, InteractionHand hand, Vec3 pos) {
-        if (!super.onPartActivate(player, hand, pos) && !isClientSide()) {
+    public boolean onUseWithoutItem(Player player, Vec3 pos) {
+        if (!super.onUseWithoutItem(player, pos) && !isClientSide()) {
             MenuOpener.open(RequesterTerminalMenu.TYPE, player, MenuLocators.forPart(this));
         }
         return true;

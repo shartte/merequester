@@ -10,9 +10,11 @@ import appeng.api.stacks.GenericStack;
 import appeng.api.storage.MEStorage;
 import appeng.helpers.externalstorage.GenericStackInv;
 import com.almostreliable.merequester.Config;
+import com.almostreliable.merequester.data.MERequesterRequest;
 import com.almostreliable.merequester.requester.abstraction.RequestHost;
 import com.almostreliable.merequester.requester.status.RequestStatus;
 import com.google.common.primitives.Ints;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -23,7 +25,10 @@ import net.neoforged.neoforge.common.util.INBTSerializable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Uses the same approach as {@link GenericStackInv} to track items and fluids.
@@ -135,19 +140,37 @@ public class Requests implements MEStorage, GenericInternalInventory, InternalIn
     }
 
     @Override
-    public CompoundTag serializeNBT() {
+    public CompoundTag serializeNBT(HolderLookup.Provider registries) {
         var tag = new CompoundTag();
         for (var i = 0; i < size(); i++) {
-            tag.put(String.valueOf(i), get(i).serializeNBT());
+            tag.put(String.valueOf(i), get(i).serializeNBT(registries));
         }
         return tag;
     }
 
     @Override
-    public void deserializeNBT(CompoundTag tag) {
+    public void deserializeNBT(HolderLookup.Provider registries, CompoundTag tag) {
         for (var i = 0; i < size(); i++) {
-            get(i).deserializeNBT(tag.getCompound(String.valueOf(i)));
+            get(i).deserializeNBT(registries, tag.getCompound(String.valueOf(i)));
         }
+    }
+
+    public void fromComponent(List<MERequesterRequest> exportedRequests) {
+        for (var i = 0; i < size(); i++) {
+            if (i < exportedRequests.size()) {
+                get(i).fromComponent(exportedRequests.get(i));
+            } else {
+                setItemDirect(i, ItemStack.EMPTY);
+            }
+        }
+    }
+
+    public List<MERequesterRequest> toComponent() {
+        var result = new ArrayList<MERequesterRequest>(size());
+        for (var i = 0; i < size(); i++) {
+            result.add(get(i).toComponent());
+        }
+        return result;
     }
 
     public int firstAvailableIndex() {
@@ -249,23 +272,41 @@ public class Requests implements MEStorage, GenericInternalInventory, InternalIn
         }
 
         @Override
-        public CompoundTag serializeNBT() {
+        public CompoundTag serializeNBT(HolderLookup.Provider registries) {
             var tag = new CompoundTag();
             tag.putBoolean(STATE_ID, state);
-            if (key != null) tag.put(KEY_ID, key.toTagGeneric());
+            if (key != null) tag.put(KEY_ID, key.toTagGeneric(registries));
             tag.putLong(AMOUNT_ID, amount);
             tag.putLong(BATCH_ID, batch);
             tag.putInt(STATUS_ID, clientStatus.ordinal());
             return tag;
         }
 
+        public MERequesterRequest toComponent() {
+            return new MERequesterRequest(
+                state,
+                Optional.ofNullable(key),
+                amount,
+                batch,
+                clientStatus
+            );
+        }
+
         @Override
-        public void deserializeNBT(CompoundTag tag) {
+        public void deserializeNBT(HolderLookup.Provider registries, CompoundTag tag) {
             state = tag.getBoolean(STATE_ID);
-            key = tag.contains(KEY_ID) ? AEKey.fromTagGeneric(tag.getCompound(KEY_ID)) : null;
+            key = tag.contains(KEY_ID) ? AEKey.fromTagGeneric(registries, tag.getCompound(KEY_ID)) : null;
             amount = tag.getLong(AMOUNT_ID);
             batch = tag.getLong(BATCH_ID);
             clientStatus = RequestStatus.values()[tag.getInt(STATUS_ID)];
+        }
+
+        public void fromComponent(MERequesterRequest request) {
+            state = request.state();
+            key = request.key().orElse(null);
+            amount = request.amount();
+            batch = request.batch();
+            clientStatus = request.clientStatus();
         }
 
         public void updateState(boolean state) {

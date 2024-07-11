@@ -1,15 +1,12 @@
 package com.almostreliable.merequester;
 
-import appeng.api.util.AEColor;
-import appeng.client.render.StaticItemColor;
-import appeng.init.client.InitScreens;
-import com.almostreliable.merequester.client.RequesterScreen;
-import com.almostreliable.merequester.client.RequesterTerminalScreen;
+import com.almostreliable.merequester.data.MERequesterData;
 import com.almostreliable.merequester.network.PacketHandler;
 import com.almostreliable.merequester.requester.RequesterMenu;
 import com.almostreliable.merequester.terminal.RequesterTerminalMenu;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
@@ -25,17 +22,14 @@ public final class MERequester {
     public static final String REQUESTER_ID = "requester";
     public static final String TERMINAL_ID = "requester_terminal";
 
-    public MERequester(IEventBus modEventBus) {
+    public MERequester(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(Registration::registerContents);
         modEventBus.addListener(Registration::registerCapabilities);
         modEventBus.addListener(Registration.Tab::initContents);
         modEventBus.addListener(PacketHandler::onPacketRegistration);
-        if (FMLEnvironment.dist.isClient()) {
-            modEventBus.addListener(MERequesterClient::registerScreens);
-            modEventBus.addListener(MERequesterClient::registerColors);
-        }
+        MERequesterData.DR.register(modEventBus);
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
     }
 
     private static class MERequesterClient {

@@ -2,56 +2,41 @@ package com.almostreliable.merequester.network;
 
 import com.almostreliable.merequester.Utils;
 import com.almostreliable.merequester.client.abstraction.AbstractRequesterScreen;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.Objects;
+public record RequesterSyncPacket(boolean clearData, long requesterId, CompoundTag data) implements CustomPacketPayload {
 
-public final class RequesterSyncPacket implements Packet {
+    static final Type<RequesterSyncPacket> TYPE = new Type<>(Utils.getRL("requester_sync"));
 
-    static final ResourceLocation ID = Utils.getRL("requester_sync");
+    static final StreamCodec<ByteBuf, RequesterSyncPacket> STREAM_CODEC = StreamCodec.composite(
+        ByteBufCodecs.BOOL, RequesterSyncPacket::clearData,
+        ByteBufCodecs.VAR_LONG, RequesterSyncPacket::requesterId,
+        ByteBufCodecs.COMPOUND_TAG, RequesterSyncPacket::data,
+        RequesterSyncPacket::new
+    );
 
-    private final boolean clearData;
-    private final long requesterId;
-    private final CompoundTag data;
-
-    private RequesterSyncPacket(boolean clearData, long requesterId, CompoundTag data) {
-        this.clearData = clearData;
-        this.requesterId = requesterId;
-        this.data = data;
-    }
-
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
-
-    public static RequesterSyncPacket clearData() {
+    public static RequesterSyncPacket createClearData() {
         return new RequesterSyncPacket(true, -1, new CompoundTag());
     }
 
-    public static RequesterSyncPacket inventory(long requesterId, CompoundTag data) {
+    public static RequesterSyncPacket createInventory(long requesterId, CompoundTag data) {
         return new RequesterSyncPacket(false, requesterId, data);
     }
 
     @Override
-    public void write(FriendlyByteBuf buffer) {
-        buffer.writeBoolean(clearData);
-        buffer.writeLong(requesterId);
-        buffer.writeNbt(data);
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    static RequesterSyncPacket decode(FriendlyByteBuf buffer) {
-        return new RequesterSyncPacket(buffer.readBoolean(), buffer.readLong(), Objects.requireNonNull(buffer.readNbt()));
-    }
-
-    @Override
-    public void handle(Player player) {
+    public static void handle(RequesterSyncPacket payload, IPayloadContext context) {
         if (Minecraft.getInstance().screen instanceof AbstractRequesterScreen<?> screen) {
-            screen.updateFromMenu(clearData, requesterId, data);
+            screen.updateFromMenu(payload.clearData, payload.requesterId, payload.data);
         }
     }
 }

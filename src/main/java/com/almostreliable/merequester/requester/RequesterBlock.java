@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
@@ -38,9 +39,7 @@ public class RequesterBlock extends AEBaseEntityBlock<RequesterBlockEntity> {
     }
 
     @Override
-    public InteractionResult onActivated(
-        Level level, BlockPos pos, Player player, InteractionHand hand, @Nullable ItemStack stack, BlockHitResult hit
-    ) {
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         var entity = getBlockEntity(level, pos);
         if (entity == null || InteractionUtil.isInAlternateUseMode(player)) return InteractionResult.PASS;
 
@@ -67,9 +66,7 @@ public class RequesterBlock extends AEBaseEntityBlock<RequesterBlockEntity> {
     }
 
     @Override
-    public void appendHoverText(
-        ItemStack stack, @Nullable BlockGetter level, List<Component> tooltip, TooltipFlag flag
-    ) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
         if (Screen.hasShiftDown()) {
             tooltip.add(Component.literal(" "));
             tooltip.add(Utils.translate("tooltip", String.format("%s_desc", MERequester.REQUESTER_ID)).withStyle(ChatFormatting.AQUA));

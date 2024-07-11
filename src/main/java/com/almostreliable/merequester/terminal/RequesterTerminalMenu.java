@@ -77,7 +77,7 @@ public class RequesterTerminalMenu extends AbstractRequesterMenu {
 
         // clear the current data on the client
         if (getPlayer() instanceof ServerPlayer serverPlayer) {
-            PacketDistributor.PLAYER.with(serverPlayer).send(RequesterSyncPacket.clearData());
+            PacketDistributor.sendToPlayer(serverPlayer, RequesterSyncPacket.createClearData());
         }
 
         for (var requester : grid.getActiveMachines(RequesterBlockEntity.class)) {

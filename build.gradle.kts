@@ -21,7 +21,7 @@ val githubUser: String by project
 val githubRepo: String by project
 
 plugins {
-    id("net.neoforged.gradle.userdev") version "7.0.97"
+    id("net.neoforged.moddev") version "1.0.1"
     id("com.github.gmazzo.buildconfig") version "4.0.4"
     java
 }
@@ -32,7 +32,7 @@ base {
     archivesName.set("$modId-neoforge")
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 val commonSystemProperties = mapOf(
         "forge.logging.console.level" to logLevel,
@@ -41,22 +41,36 @@ val commonSystemProperties = mapOf(
         "guideDev.ae2guide.sourcesNamespace" to modId
 )
 
-runs {
-    configureEach {
-        workingDirectory = project.file("run")
-        systemProperties = commonSystemProperties
-        modSource(sourceSets.main.get())
-        jvmArguments("-XX:+IgnoreUnrecognizedVMOptions", "-XX:+AllowEnhancedClassRedefinition")
+neoForge {
+    version = neoVersion
+    mods {
+        create("merequester") {
+            modSourceSets.add(sourceSets.main)
+        }
     }
+    runs {
+        configureEach {
+            gameDirectory = project.file("run")
+            systemProperties = commonSystemProperties
+            jvmArguments = listOf("-XX:+IgnoreUnrecognizedVMOptions", "-XX:+AllowEnhancedClassRedefinition")
+        }
 
-    create("client") {
-        programArguments("--quickPlaySingleplayer", "New World")
+        create("client") {
+            client()
+            programArguments.addAll("--quickPlaySingleplayer", "New World")
+        }
+        create("guide") {
+            client()
+            systemProperty("guideDev.ae2guide.startupPage", "$modId:$modId.md")
+        }
+        create("server") {
+            server()
+        }
     }
-    create("guide") {
-        configure("client")
-        systemProperty("guideDev.ae2guide.startupPage", "$modId:$modId.md")
+    parchment {
+        mappingsVersion = parchmentVersion
+        minecraftVersion = mcVersion
     }
-    create("server")
 }
 
 repositories {
@@ -69,21 +83,12 @@ repositories {
 }
 
 dependencies {
-    // NeoForge
-    implementation("net.neoforged:neoforge:$neoVersion")
-
-    // Compile
-    compileOnly("appeng:appliedenergistics2-neoforge:$aeVersion")
+    implementation("appeng:appliedenergistics2:$aeVersion")
 
     // Runtime
-    runtimeOnly("appeng:appliedenergistics2-neoforge:$aeVersion")
     when (recipeViewer) {
         "jei" -> runtimeOnly("mezz.jei:jei-$mcVersion-neoforge:$jeiVersion") { isTransitive = false }
-        "rei" -> {
-            runtimeOnly("me.shedaniel:RoughlyEnoughItems-neoforge:$reiVersion")
-            runtimeOnly("dev.architectury:architectury-neoforge:11.1.17") // TODO: Remove on new REI version
-        }
-
+        "rei" -> runtimeOnly("me.shedaniel:RoughlyEnoughItems-neoforge:$reiVersion")
         "emi" -> runtimeOnly("dev.emi:emi-neoforge:$emiVersion+$mcVersion")
         else -> throw GradleException("Invalid recipeViewer value: $recipeViewer")
     }
@@ -91,7 +96,7 @@ dependencies {
 
 tasks {
     processResources {
-        val resourceTargets = listOf("META-INF/mods.toml", "pack.mcmeta")
+        val resourceTargets = listOf("META-INF/neoforge.mods.toml", "pack.mcmeta")
 
         val replaceProperties = mapOf(
                 "license" to license,
@@ -118,7 +123,6 @@ tasks {
 
     withType<JavaCompile> {
         options.encoding = "UTF-8"
-        options.release.set(17)
     }
 
     withType<Jar> {
@@ -130,11 +134,6 @@ tasks {
     withType<GenerateModuleMetadata> {
         enabled = false
     }
-}
-
-subsystems.parchment {
-    minecraftVersion(mcVersion)
-    mappingsVersion(parchmentVersion)
 }
 
 buildConfig {

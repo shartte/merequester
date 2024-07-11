@@ -13,7 +13,7 @@ public final class Utils {
     private Utils() {}
 
     public static ResourceLocation getRL(String path) {
-        return new ResourceLocation(BuildConfig.MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(BuildConfig.MOD_ID, path);
     }
 
     public static int fillColorAlpha(ChatFormatting color) {

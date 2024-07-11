@@ -2,59 +2,54 @@ package com.almostreliable.merequester.network;
 
 import com.almostreliable.merequester.Utils;
 import com.almostreliable.merequester.requester.abstraction.AbstractRequesterMenu;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public final class RequestUpdatePacket implements Packet {
+public record RequestUpdatePacket(
+    UpdateType updateType,
+    long requesterId,
+    int requestIndex,
+    boolean state,
+    long amount,
+    long batch
+) implements CustomPacketPayload {
 
-    static final ResourceLocation ID = Utils.getRL("request_update");
+    static final Type<RequestUpdatePacket> TYPE = new Type<>(Utils.getRL("request_update"));
 
-    private final UpdateType updateType;
-    private final long requesterId;
-    private final int requestIndex;
-
-    private boolean state;
-    private long amount;
-    private long batch;
+    static final StreamCodec<FriendlyByteBuf, RequestUpdatePacket> STREAM_CODEC = StreamCodec.of(
+        RequestUpdatePacket::encode,
+        RequestUpdatePacket::decode
+    );
 
     public RequestUpdatePacket(long requesterId, int requestIndex, boolean state) {
-        this.updateType = UpdateType.STATE;
-        this.requesterId = requesterId;
-        this.requestIndex = requestIndex;
-        this.state = state;
+        this(UpdateType.STATE, requesterId, requestIndex, state, 0, 0);
     }
 
     public RequestUpdatePacket(long requesterId, int requestIndex, long amount, long batch) {
-        this.updateType = UpdateType.NUMBERS;
-        this.requesterId = requesterId;
-        this.requestIndex = requestIndex;
-        this.amount = amount;
-        this.batch = batch;
+        this(UpdateType.NUMBERS, requesterId, requestIndex, false, amount, batch);
     }
 
-    @Override
-    public ResourceLocation id() {
-        return ID;
-    }
+    private static void encode(FriendlyByteBuf buffer, RequestUpdatePacket payload) {
+        buffer.writeLong(payload.requesterId);
+        buffer.writeVarInt(payload.requestIndex);
 
-    @Override
-    public void write(FriendlyByteBuf buffer) {
-        buffer.writeLong(requesterId);
-        buffer.writeVarInt(requestIndex);
-
-        buffer.writeVarInt(updateType.ordinal());
-        if (updateType == UpdateType.STATE) {
-            buffer.writeBoolean(state);
-        } else if (updateType == UpdateType.NUMBERS) {
-            buffer.writeLong(amount);
-            buffer.writeLong(batch);
+        buffer.writeVarInt(payload.updateType.ordinal());
+        if (payload.updateType == UpdateType.STATE) {
+            buffer.writeBoolean(payload.state);
+        } else if (payload.updateType == UpdateType.NUMBERS) {
+            buffer.writeLong(payload.amount);
+            buffer.writeLong(payload.batch);
         } else {
-            throw new IllegalStateException("Unknown update type: " + updateType);
+            throw new IllegalStateException("Unknown update type: " + payload.updateType);
         }
     }
 
-    static RequestUpdatePacket decode(FriendlyByteBuf buffer) {
+    private static RequestUpdatePacket decode(FriendlyByteBuf buffer) {
         var id = buffer.readLong();
         var index = buffer.readVarInt();
 
@@ -68,15 +63,18 @@ public final class RequestUpdatePacket implements Packet {
         throw new IllegalStateException("Unknown update type: " + type);
     }
 
-    @Override
-    public void handle(Player player) {
-        if (player.containerMenu instanceof AbstractRequesterMenu requester) {
-            if (updateType == UpdateType.STATE) {
-                requester.updateRequesterState(requesterId, requestIndex, state);
-            } else if (updateType == UpdateType.NUMBERS) {
-                requester.updateRequesterNumbers(requesterId, requestIndex, amount, batch);
+    public static void handle(RequestUpdatePacket payload, IPayloadContext context) {
+        if (context.player().containerMenu instanceof AbstractRequesterMenu requester) {
+            switch (payload.updateType) {
+                case STATE -> requester.updateRequesterState(payload.requesterId, payload.requestIndex, payload.state);
+                case NUMBERS -> requester.updateRequesterNumbers(payload.requesterId, payload.requestIndex, payload.amount, payload.batch);
             }
         }
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     private enum UpdateType {

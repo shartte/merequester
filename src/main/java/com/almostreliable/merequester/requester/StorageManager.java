@@ -5,6 +5,7 @@ import appeng.api.networking.IStackWatcher;
 import appeng.api.networking.storage.IStorageWatcherNode;
 import appeng.api.stacks.AEKey;
 import com.almostreliable.merequester.Config;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.INBTSerializable;
@@ -59,18 +60,18 @@ public class StorageManager implements IStorageWatcherNode, INBTSerializable<Com
     }
 
     @Override
-    public CompoundTag serializeNBT() {
+    public CompoundTag serializeNBT(HolderLookup.Provider registries) {
         var tag = new CompoundTag();
         for (var i = 0; i < storages.length; i++) {
-            tag.put(String.valueOf(i), get(i).serializeNBT());
+            tag.put(String.valueOf(i), get(i).serializeNBT(registries));
         }
         return tag;
     }
 
     @Override
-    public void deserializeNBT(CompoundTag tag) {
+    public void deserializeNBT(HolderLookup.Provider registries, CompoundTag tag) {
         for (var i = 0; i < storages.length; i++) {
-            get(i).deserializeNBT(tag.getCompound(String.valueOf(i)));
+            get(i).deserializeNBT(registries, tag.getCompound(String.valueOf(i)));
         }
     }
 
@@ -124,9 +125,9 @@ public class StorageManager implements IStorageWatcherNode, INBTSerializable<Com
         private long knownAmount = -1; // the known amount stored in the system
 
         @Override
-        public CompoundTag serializeNBT() {
+        public CompoundTag serializeNBT(HolderLookup.Provider registries) {
             var tag = new CompoundTag();
-            if (key != null) tag.put(KEY_ID, key.toTagGeneric());
+            if (key != null) tag.put(KEY_ID, key.toTagGeneric(registries));
             tag.putLong(BUFFER_AMOUNT_ID, bufferAmount);
             tag.putLong(PENDING_AMOUNT_ID, pendingAmount);
             tag.putLong(KNOWN_AMOUNT_ID, knownAmount);
@@ -134,8 +135,8 @@ public class StorageManager implements IStorageWatcherNode, INBTSerializable<Com
         }
 
         @Override
-        public void deserializeNBT(CompoundTag tag) {
-            key = tag.contains(KEY_ID) ? AEKey.fromTagGeneric(tag.getCompound(KEY_ID)) : null;
+        public void deserializeNBT(HolderLookup.Provider registries, CompoundTag tag) {
+            key = tag.contains(KEY_ID) ? AEKey.fromTagGeneric(registries, tag.getCompound(KEY_ID)) : null;
             bufferAmount = tag.getLong(BUFFER_AMOUNT_ID);
             pendingAmount = tag.getLong(PENDING_AMOUNT_ID);
             knownAmount = tag.getLong(KNOWN_AMOUNT_ID);

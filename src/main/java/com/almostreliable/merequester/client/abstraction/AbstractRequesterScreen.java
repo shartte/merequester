@@ -10,7 +10,6 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.Scrollbar;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.Tooltips;
-import appeng.core.network.NetworkHandler;
 import appeng.core.network.serverbound.InventoryActionPacket;
 import appeng.helpers.InventoryAction;
 import com.almostreliable.merequester.MERequester;
@@ -31,6 +30,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
@@ -121,7 +121,7 @@ public abstract class AbstractRequesterScreen<M extends AbstractRequesterMenu> e
         for (var i = 0; i < requests.size(); i++) {
             var requestIndex = String.valueOf(i);
             if (data.contains(requestIndex)) {
-                requests.get(i).deserializeNBT(data.getCompound(requestIndex));
+                requests.get(i).deserializeNBT(menu.getPlayer().registryAccess(), data.getCompound(requestIndex));
             }
         }
 
@@ -231,7 +231,7 @@ public abstract class AbstractRequesterScreen<M extends AbstractRequesterMenu> e
                 requestSlot.getSlot(),
                 requestSlot.getRequesterReference().getRequesterId()
             );
-            NetworkHandler.instance().sendToServer(packet);
+            PacketDistributor.sendToServer(packet);
             return;
         }
 
@@ -254,7 +254,7 @@ public abstract class AbstractRequesterScreen<M extends AbstractRequesterMenu> e
                 requestSlot.getSlot(),
                 requestSlot.getRequesterReference().getRequesterId()
             );
-            NetworkHandler.instance().sendToServer(packet);
+            PacketDistributor.sendToServer(packet);
         }
     }
 

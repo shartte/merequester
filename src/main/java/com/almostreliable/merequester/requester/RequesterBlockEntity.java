@@ -20,6 +20,7 @@ import appeng.util.SettingsFrom;
 import com.almostreliable.merequester.Config;
 import com.almostreliable.merequester.MERequester;
 import com.almostreliable.merequester.Utils;
+import com.almostreliable.merequester.data.MERequesterData;
 import com.almostreliable.merequester.requester.abstraction.RequestHost;
 import com.almostreliable.merequester.requester.status.LinkState;
 import com.almostreliable.merequester.requester.status.RequestStatus;
@@ -27,6 +28,8 @@ import com.almostreliable.merequester.requester.status.StatusState;
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -71,34 +74,37 @@ public class RequesterBlockEntity extends AENetworkBlockEntity implements Reques
     }
 
     @Override
-    public void loadTag(CompoundTag tag) {
-        super.loadTag(tag);
-        if (tag.contains(REQUESTS_ID)) requests.deserializeNBT(tag.getCompound(REQUESTS_ID));
+    public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadTag(tag, registries);
+        if (tag.contains(REQUESTS_ID)) requests.deserializeNBT(registries, tag.getCompound(REQUESTS_ID));
         if (tag.contains(REQUEST_STATUS_ID)) deserializeStatus(tag.getCompound(REQUEST_STATUS_ID));
-        if (tag.contains(STORAGE_MANAGER_ID)) storageManager.deserializeNBT(tag.getCompound(STORAGE_MANAGER_ID));
+        if (tag.contains(STORAGE_MANAGER_ID)) storageManager.deserializeNBT(registries, tag.getCompound(STORAGE_MANAGER_ID));
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.put(REQUESTS_ID, requests.serializeNBT());
+    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.put(REQUESTS_ID, requests.serializeNBT(registries));
         tag.put(REQUEST_STATUS_ID, serializeStatus());
-        tag.put(STORAGE_MANAGER_ID, storageManager.serializeNBT());
+        tag.put(STORAGE_MANAGER_ID, storageManager.serializeNBT(registries));
     }
 
     @Override
-    public void importSettings(SettingsFrom mode, CompoundTag input, @Nullable Player player) {
+    public void importSettings(SettingsFrom mode, DataComponentMap input, @Nullable Player player) {
         super.importSettings(mode, input, player);
         if (mode == SettingsFrom.MEMORY_CARD) {
-            if (input.contains(REQUESTS_ID)) requests.deserializeNBT(input.getCompound(REQUESTS_ID));
+            var exportedRequests = input.get(MERequesterData.EXPORTED_REQUESTER_REQUESTS);
+            if (exportedRequests != null) {
+                requests.fromComponent(exportedRequests);
+            }
         }
     }
 
     @Override
-    public void exportSettings(SettingsFrom mode, CompoundTag output, @Nullable Player player) {
-        super.exportSettings(mode, output, player);
+    public void exportSettings(SettingsFrom mode, DataComponentMap.Builder builder, @Nullable Player player) {
+        super.exportSettings(mode, builder, player);
         if (mode == SettingsFrom.MEMORY_CARD) {
-            output.put(REQUESTS_ID, requests.serializeNBT());
+            builder.set(MERequesterData.EXPORTED_REQUESTER_REQUESTS, requests.toComponent());
         }
     }
 

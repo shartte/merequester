@@ -110,17 +110,17 @@ public abstract class AbstractRequesterMenu extends AEBaseMenu {
         var client = requestTracker.getClient();
 
         // get the requests from the server
-        var tag = server.serializeNBT();
+        var tag = server.serializeNBT(getPlayer().registryAccess());
         // store the information in the client tracker to
         // check for differences on partial updates later
         // tag serialization is used to avoid references to the original data
-        client.deserializeNBT(tag);
+        client.deserializeNBT(getPlayer().registryAccess(), tag);
 
         // send relevant data to the client
         tag.putString(UNIQUE_NAME_ID, requestTracker.getName());
         tag.putLong(SORT_BY_ID, requestTracker.getSortBy());
         if (getPlayer() instanceof ServerPlayer serverPlayer) {
-            PacketDistributor.PLAYER.with(serverPlayer).send(RequesterSyncPacket.inventory(requestTracker.getId(), tag));
+            PacketDistributor.sendToPlayer(serverPlayer, RequesterSyncPacket.createInventory(requestTracker.getId(), tag));
         }
     }
 
@@ -142,16 +142,16 @@ public abstract class AbstractRequesterMenu extends AEBaseMenu {
                     tag.putLong(SORT_BY_ID, requestTracker.getSortBy());
                 }
 
-                var serverData = serverRequest.serializeNBT();
+                var serverData = serverRequest.serializeNBT(getPlayer().registryAccess());
                 tag.put(String.valueOf(i), serverData);
                 // update the client information for future difference checks
-                clientRequest.deserializeNBT(serverData);
+                clientRequest.deserializeNBT(getPlayer().registryAccess(), serverData);
             }
         }
 
         // only send an update if something changed
         if (tag != null && getPlayer() instanceof ServerPlayer serverPlayer) {
-            PacketDistributor.PLAYER.with(serverPlayer).send(RequesterSyncPacket.inventory(requestTracker.getId(), tag));
+            PacketDistributor.sendToPlayer(serverPlayer, RequesterSyncPacket.createInventory(requestTracker.getId(), tag));
         }
     }
 
