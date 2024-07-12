@@ -31,21 +31,4 @@ public final class MERequester {
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
     }
-
-    private static class MERequesterClient {
-
-        @SuppressWarnings("RedundantTypeArguments")
-        private static void registerScreens(RegisterMenuScreensEvent event) {
-            InitScreens.register(RequesterMenu.TYPE, RequesterScreen::new, String.format("/screens/%s.json", REQUESTER_ID));
-            InitScreens.<RequesterTerminalMenu, RequesterTerminalScreen<RequesterTerminalMenu>> register(
-                RequesterTerminalMenu.TYPE,
-                RequesterTerminalScreen::new,
-                String.format("/screens/%s.json", TERMINAL_ID)
-            );
-        }
-
-        private static void registerColors(RegisterColorHandlersEvent.Item event) {
-            event.register(new StaticItemColor(AEColor.TRANSPARENT), Registration.REQUESTER_TERMINAL);
-        }
-    }
 }
