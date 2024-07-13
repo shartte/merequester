@@ -14,11 +14,12 @@ import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.orientation.BlockOrientation;
 import appeng.api.stacks.AEKey;
 import appeng.api.storage.StorageHelper;
-import appeng.blockentity.grid.AENetworkBlockEntity;
+import appeng.blockentity.grid.AENetworkedBlockEntity;
 import appeng.me.helpers.MachineSource;
 import appeng.util.SettingsFrom;
 import com.almostreliable.merequester.Config;
 import com.almostreliable.merequester.MERequester;
+import com.almostreliable.merequester.Registration;
 import com.almostreliable.merequester.Utils;
 import com.almostreliable.merequester.data.MERequesterData;
 import com.almostreliable.merequester.requester.abstraction.RequestHost;
@@ -41,7 +42,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class RequesterBlockEntity extends AENetworkBlockEntity implements RequestHost, IGridTickable, ICraftingRequester {
+public class RequesterBlockEntity extends AENetworkedBlockEntity implements RequestHost, IGridTickable, ICraftingRequester {
 
     // serialization IDs
     private static final String REQUESTS_ID = "requests";
@@ -54,6 +55,10 @@ public class RequesterBlockEntity extends AENetworkBlockEntity implements Reques
     private final IActionSource actionSource;
 
     private TickRateModulation currentTickRate = TickRateModulation.IDLE;
+
+    public RequesterBlockEntity(BlockPos pos, BlockState blockState) {
+        this(Registration.REQUESTER_ENTITY.get(), pos, blockState);
+    }
 
     public RequesterBlockEntity(BlockEntityType<?> blockEntityType, BlockPos pos, BlockState blockState) {
         super(blockEntityType, pos, blockState);
