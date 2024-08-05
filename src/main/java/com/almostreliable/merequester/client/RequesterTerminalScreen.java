@@ -27,7 +27,7 @@ import java.util.*;
 public class RequesterTerminalScreen<T extends RequesterTerminalMenu> extends AbstractRequesterScreen<T> {
 
     private static final ResourceLocation TEXTURE = Utils.getRL(String.format("textures/gui/%s.png", MERequester.TERMINAL_ID));
-    private static final Rect2i FOOTER_BBOX = new Rect2i(0, 133, GUI_WIDTH, GUI_FOOTER_HEIGHT);
+    private static final Rect2i FOOTER_BBOX = new Rect2i(0, 133, GUI_WIDTH, GUI_FOOTER_HEIGHT + 2);
 
     private final HashMap<Long, RequesterReference> byId = new HashMap<>();
     private final HashMultimap<String, RequesterReference> byName = HashMultimap.create();

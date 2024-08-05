@@ -30,10 +30,13 @@ public class StateBox extends AECheckbox implements ITooltip {
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mX, int mY, float partial) {
         Blitter icon;
-        if (isFocused() || isMouseOver(mX, mY)) {
+        if (isMouseOver(mX, mY) && !isFocused()) {
             icon = isSelected() ? CHECKED_FOCUS : UNCHECKED_FOCUS;
         } else {
             icon = isSelected() ? CHECKED : UNCHECKED;
+        }
+        if (!isMouseOver(mX, mY)) {
+            setFocused(false);
         }
         var opacity = isActive() ? 1 : 0.5f;
         icon.dest(getX(), getY()).opacity(opacity).blit(guiGraphics);
