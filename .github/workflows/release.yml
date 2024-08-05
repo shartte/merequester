@@ -34,9 +34,11 @@ on:
 
 jobs:
   redirect:
-    uses: AlmostReliable/.github/.github/workflows/release-java17-nf.yml@main
+    uses: AlmostReliable/.github/.github/workflows/release-nf.yml@main
     secrets: inherit
     with:
+      java-distribution: "microsoft"
+      java-version: "21"
       mod_name: "MERequester"
       curseforge_id: "688367"
       modrinth_id: "E6BFl96N"
