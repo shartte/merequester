@@ -7,7 +7,7 @@
   ],
   "key": {
     "e": {
-      "tag": "forge:ingots/iron"
+      "tag": "c:ingots/iron"
     },
     "i": {
       "tag": "ae2:interface"
@@ -19,13 +19,13 @@
       "item": "ae2:engineering_processor"
     },
     "c": {
-      "tag": "forge:ingots/copper"
+      "tag": "c:ingots/copper"
     },
     "s": {
       "item": "minecraft:amethyst_shard"
     }
   },
   "result": {
-    "item": "merequester:requester"
+    "id": "merequester:requester"
   }
 }
