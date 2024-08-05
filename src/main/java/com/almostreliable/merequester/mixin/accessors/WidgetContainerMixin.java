@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
 
-@SuppressWarnings("ALL")
 @Mixin(WidgetContainer.class)
 public interface WidgetContainerMixin {
 
